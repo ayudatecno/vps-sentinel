@@ -1,5 +1,7 @@
 # vps-sentinel
 
+[![lint](https://github.com/ayudatecno/vps-sentinel/actions/workflows/lint.yml/badge.svg)](https://github.com/ayudatecno/vps-sentinel/actions/workflows/lint.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) ![bash](https://img.shields.io/badge/dependencies-bash%20%2B%20curl%20%2B%20cron-blue)
+
 **Zero-dependency ops safety net for a VPS or small Docker Swarm — bash + curl + cron, alerts to your Telegram DM.**
 
 If you run production on one or two VPS (a SaaS, a client stack, a side project), you have the same four problems every managed platform solves with a team you don't have:

@@ -312,7 +312,7 @@ Running a clean restart: <code>docker service update --force ${APP_SERVICE}</cod
 
   # Give it up to 2 minutes to come back, then report the outcome
   local recovered=0
-  for i in $(seq 1 12); do
+  for _ in $(seq 1 12); do
     sleep 10
     health_local && { recovered=1; break; }
   done

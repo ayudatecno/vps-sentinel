@@ -145,7 +145,7 @@ docker run -d --name "$DRILL_CONTAINER" --label dr-drill=1 \
   "$PG_IMAGE" >/dev/null 2>>"$LOG_FILE" || fail "could not create the throwaway container"
 
 READY=0
-for i in $(seq 1 30); do
+for _ in $(seq 1 30); do
   docker exec "$DRILL_CONTAINER" pg_isready -U postgres >/dev/null 2>&1 && { READY=1; break; }
   sleep 2
 done
