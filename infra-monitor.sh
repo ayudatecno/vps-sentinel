@@ -348,9 +348,16 @@ build_digest() {
   local load_avg; load_avg=$(uptime | sed 's/.*load average: //')
   local up_since; up_since=$(uptime -p)
 
-  local apt_count; apt_count=$(apt list --upgradable 2>/dev/null | grep -cv '^Listing' || echo 0)
+  # Pending updates — cross-distro (apt / dnf / yum / apk / pacman), best-effort.
+  local pkg_pending="n/a"
+  if   command -v apt >/dev/null 2>&1;    then pkg_pending=$(apt list --upgradable 2>/dev/null | grep -cv '^Listing')
+  elif command -v dnf >/dev/null 2>&1;    then pkg_pending=$(dnf -q check-update 2>/dev/null | grep -c '^\S' || echo 0)
+  elif command -v yum >/dev/null 2>&1;    then pkg_pending=$(yum -q check-update 2>/dev/null | grep -c '^\S' || echo 0)
+  elif command -v apk >/dev/null 2>&1;    then pkg_pending=$(apk version -l '<' 2>/dev/null | grep -c '^\S' || echo 0)
+  elif command -v pacman >/dev/null 2>&1; then pkg_pending=$(pacman -Qu 2>/dev/null | wc -l)
+  fi
   local reboot_req="no"
-  [ -f /var/run/reboot-required ] && reboot_req="<b>YES</b>"
+  { [ -f /var/run/reboot-required ] || [ -f /var/run/reboot-required.pkgs ]; } && reboot_req="<b>YES</b>"
 
   local docker_reclaim; docker_reclaim=$(docker system df 2>/dev/null | awk '/^Images/ {print $5}' | head -1)
 
@@ -372,7 +379,7 @@ build_digest() {
 • Reclaimable images: ${docker_reclaim:-?}
 
 <b>OS</b>
-• APT updates pending: ${apt_count}
+• Updates pending: ${pkg_pending}
 • Reboot required: ${reboot_req}"
 
   if [ "$NODE_ROLE" = "manager" ] && docker node ls > /dev/null 2>&1; then

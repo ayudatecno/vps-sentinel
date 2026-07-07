@@ -45,9 +45,11 @@ Works on plain Docker hosts too — the swarm checks self-disable when the node 
 
 ## Requirements
 
-- Linux with bash, curl, cron (systemd journal assumed for the journal-vacuum step)
+- Linux with bash, curl, cron
 - Docker (for the docker checks, auto-heal categories and restore drill)
 - `rclone` configured with your offsite remote (restore drill only)
+
+Distro-agnostic: package-cache cleanup and the "updates pending" digest line auto-detect apt / dnf / yum / apk / pacman, and the journal-vacuum step is skipped cleanly on non-systemd hosts. Tested on Debian/Ubuntu; Alpine, Fedora and Arch paths are best-effort — issues/PRs from those welcome.
 
 ## Hard-won gotchas baked in
 

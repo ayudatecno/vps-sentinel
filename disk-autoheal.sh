@@ -114,13 +114,28 @@ step() {  # step "label" cmd...
   log "step '$label' freed $(human $freed)"
 }
 
+# Cross-distro helpers: skip cleanly on hosts that don't have the tool, instead
+# of emitting a scary "exited non-zero" for every non-Debian / non-systemd box.
+clean_journal() {
+  command -v journalctl >/dev/null 2>&1 || { echo "journalctl not present — skipping"; return 0; }
+  journalctl --vacuum-size=500M --vacuum-time=14d
+}
+clean_pkg_cache() {
+  if   command -v apt-get >/dev/null 2>&1; then apt-get clean
+  elif command -v dnf     >/dev/null 2>&1; then dnf clean all
+  elif command -v yum     >/dev/null 2>&1; then yum clean all
+  elif command -v apk     >/dev/null 2>&1; then rm -rf /var/cache/apk/*
+  elif command -v pacman  >/dev/null 2>&1; then pacman -Scc --noconfirm
+  else echo "no known package manager — skipping"; fi
+}
+
 step "Dangling Docker images"        docker image prune -f
 step "Docker build cache"            docker builder prune -af
-step "systemd journal"               journalctl --vacuum-size=500M --vacuum-time=14d
+step "System journal"                clean_journal
 step "Rotated logs (>14d)"           find /var/log -type f \( -name "*.gz" -o -name "*.[0-9]" -o -name "*.old" \) -mtime +14 -delete
 step "Container logs (>500M)"        bash -c 'find /var/lib/docker/containers -name "*-json.log" -size +500M -exec truncate -s 0 {} \; 2>/dev/null || true'
 step "Orphaned backup tmpdirs"       bash -c 'find /tmp -maxdepth 1 -type d -name "backup-*" -mmin +360 -exec rm -rf {} + 2>/dev/null || true'
-step "apt cache"                     apt-get clean
+step "Package cache"                 clean_pkg_cache
 
 PCT_AFTER=$(pct_used)
 KB_AFTER=$(avail_kb)
